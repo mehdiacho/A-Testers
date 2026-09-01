@@ -1,0 +1,53 @@
+rules_version = '2';
+
+// Cloud Storage rules.
+//
+// Two buckets of user content: proof screenshots and app icons.
+//
+// Note on proof reads: Storage rules cannot query Firestore, so we cannot express
+// "readable by the tester and by the app owner" here. Phase 1 allows any signed-in user
+// to read a proof given its exact path, which is only discoverable from a reservation
+// document that the rules already restrict to those two parties. If that proves too
+// loose, the fix is to drop these to owner-only and have reviewProof hand the developer
+// a short-lived signed URL instead.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/(png|jpeg|webp)');
+    }
+
+    function underSize(mb) {
+      return request.resource.size < mb * 1024 * 1024;
+    }
+
+    // proofs/{testerUid}/{appId}/{fileName}
+    match /proofs/{testerUid}/{appId}/{fileName} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.auth.uid == testerUid
+                    && isImage()
+                    && underSize(8);
+      // Proofs are evidence. Once uploaded they are immutable.
+      allow update, delete: if false;
+    }
+
+    // icons/{ownerUid}/{appId}.png
+    match /icons/{ownerUid}/{fileName} {
+      allow read: if true;
+      allow write: if signedIn()
+                   && request.auth.uid == ownerUid
+                   && isImage()
+                   && underSize(2);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

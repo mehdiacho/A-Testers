@@ -1,0 +1,98 @@
+{
+  "indexes": [
+    {
+      "_comment": "Public catalogue: open apps, newest first.",
+      "collectionGroup": "apps",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "_comment": "Public catalogue filtered by category.",
+      "collectionGroup": "apps",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "_comment": "A developer's own listings.",
+      "collectionGroup": "apps",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerUid", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "_comment": "Package-name uniqueness lookup on create.",
+      "collectionGroup": "apps",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "packageName", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "_comment": "Tester dashboard: my tests, newest first.",
+      "collectionGroup": "reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "testerUid", "order": "ASCENDING" },
+        { "fieldPath": "reservedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "_comment": "Tester dashboard filtered by status, and the open-reservation count guard.",
+      "collectionGroup": "reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "testerUid", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "reservedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "_comment": "Developer review queue: oldest pending proof first.",
+      "collectionGroup": "reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerUid", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "proofSubmittedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "_comment": "Per-app tester roster and the retention board.",
+      "collectionGroup": "reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "appId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "_comment": "Hourly expiry sweep: active reservations past expiresAt.",
+      "collectionGroup": "reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "expiresAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "_comment": "A user's seat history.",
+      "collectionGroup": "ledger",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

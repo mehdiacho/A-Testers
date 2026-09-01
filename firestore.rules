@@ -1,0 +1,159 @@
+rules_version = '2';
+
+// A-Testers Firestore rules.
+//
+// Governing principle: **every field that carries economic value is function-only.**
+// Seat balances, holds, reservation status and the ledger can only be written by the
+// Admin SDK, which bypasses these rules. Clients get narrow write access to cosmetic
+// profile fields and to app listing metadata, and nothing else.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Admin is a custom claim set by a Cloud Function, not a field a user can write.
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    // True when `field` is identical before and after the write.
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    // The set of keys the write is allowed to touch, and nothing more.
+    function onlyChanges(allowed) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowed);
+    }
+
+    // ---------------------------------------------------------------------
+    // users — public profile + economy state
+    // ---------------------------------------------------------------------
+
+    match /users/{uid} {
+      // Profiles are public so testers and developers can see who they are dealing with.
+      allow read: if signedIn();
+
+      // Created by the auth onCreate trigger, never by the client — a client-created
+      // doc could seed itself a seat balance.
+      allow create: if false;
+
+      // The owner may edit presentation only. seatBalance, seatsHeld, stats, reputation,
+      // strikes, banned and isAdmin are all function-only.
+      allow update: if isUser(uid)
+                    && onlyChanges(['displayName', 'photoURL', 'updatedAt'])
+                    && request.resource.data.displayName is string
+                    && request.resource.data.displayName.size() >= 2
+                    && request.resource.data.displayName.size() <= 40;
+
+      allow delete: if false;
+
+      // users/{uid}/private/contact — email + Play account. Owner and admins only.
+      match /private/{docId} {
+        allow read: if isUser(uid) || isAdmin();
+        // playEmail is the one field the user genuinely needs to set themselves.
+        allow write: if isUser(uid)
+                     && request.resource.data.keys().hasOnly(['email', 'playEmail']);
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // apps — listings
+    // ---------------------------------------------------------------------
+
+    match /apps/{appId} {
+      // The public catalogue is server-rendered for SEO, so open listings are world
+      // readable. Everything else is visible to its owner and admins only.
+      allow read: if resource.data.status in ['open', 'full', 'completed']
+                  || (signedIn() && resource.data.ownerUid == request.auth.uid)
+                  || isAdmin();
+
+      // Creation goes through the createApp callable: it needs to enforce package-name
+      // uniqueness, which rules cannot express.
+      allow create: if false;
+
+      // The owner may edit listing copy. Status and every seat counter are function-only,
+      // because opening a listing requires a seat check and the counters back invariant 6.
+      allow update: if signedIn()
+                    && resource.data.ownerUid == request.auth.uid
+                    && onlyChanges(['name', 'shortDescription', 'category', 'iconUrl',
+                                    'playTestUrl', 'googleGroupUrl', 'updatedAt'])
+                    && unchanged('ownerUid')
+                    && unchanged('packageName')
+                    && unchanged('status')
+                    && unchanged('seatsRequested')
+                    && unchanged('seatsReserved')
+                    && unchanged('seatsFilled');
+
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // reservations — the join object. Every transition moves a seat.
+    // ---------------------------------------------------------------------
+
+    match /reservations/{reservationId} {
+      // Visible to the two parties: the tester who holds it and the developer reviewing it.
+      allow read: if signedIn()
+                  && (resource.data.testerUid == request.auth.uid
+                      || resource.data.ownerUid == request.auth.uid
+                      || isAdmin());
+
+      // reserveSlot / submitProof / reviewProof / withdrawReservation only.
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // ledger — append-only audit trail
+    // ---------------------------------------------------------------------
+
+    match /ledger/{entryId} {
+      allow read: if signedIn()
+                  && (resource.data.uid == request.auth.uid || isAdmin());
+      // Written by the Admin SDK inside the same transaction as the balance change.
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // config — platform singleton
+    // ---------------------------------------------------------------------
+
+    match /config/{docId} {
+      allow read: if true;
+      // Changed through the console or an admin function, never from a client session.
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // reports — abuse reports
+    // ---------------------------------------------------------------------
+
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+      allow create: if signedIn()
+                    && request.resource.data.reporterUid == request.auth.uid
+                    && request.resource.data.keys().hasOnly(
+                         ['reporterUid', 'targetType', 'targetId', 'reason', 'detail', 'createdAt'])
+                    && request.resource.data.reason is string
+                    && request.resource.data.reason.size() <= 80
+                    && request.resource.data.detail.size() <= 1000;
+      allow update, delete: if isAdmin();
+    }
+
+    // Default deny for anything not matched above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

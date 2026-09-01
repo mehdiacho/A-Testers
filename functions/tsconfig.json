@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "outDir": "lib",
+    // rootDir is the repo root so that packages/shared compiles into the same output
+    // tree as the functions themselves. That keeps the deployed bundle self-contained:
+    // no workspace symlinks to resolve in the Cloud Functions build environment.
+    "rootDir": "..",
+    "sourceMap": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "../packages/shared/src/**/*.ts"],
+  "exclude": ["lib", "node_modules"]
+}

@@ -1,0 +1,41 @@
+node_modules/
+dist/
+lib/
+.next/
+out/
+build/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+pubsub-debug.log
+storage-debug.log
+.runtimeconfig.json
+*-service-account*.json
+emulator-data/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+apphosting.yaml.local
+
+# Android
+android/.gradle/
+android/local.properties
+android/**/build/
+android/.idea/
+android/app/google-services.json
+*.keystore
+*.jks
+
+# Editors and OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
