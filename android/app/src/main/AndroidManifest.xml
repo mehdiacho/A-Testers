@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+      Install verification reads the install state of the apps the user has agreed to
+      test. Android 11+ hides other packages by default; we do not enumerate anything —
+      each query is for one package name the user has explicitly reserved a slot for —
+      so a targeted <queries> element is the right scope rather than QUERY_ALL_PACKAGES,
+      which Play restricts and would reject for this use.
+      The wildcard intent below is the narrowest thing that still lets us ask about an
+      arbitrary reserved package by name at runtime.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".AtestersApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ATesters">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.ATesters">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

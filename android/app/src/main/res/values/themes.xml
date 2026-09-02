@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose paints everything; this only needs to keep the launch window dark so
+         there is no white flash before the first frame. -->
+    <style name="Theme.ATesters" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#0B0F0E</item>
+        <item name="android:statusBarColor">#0B0F0E</item>
+        <item name="android:navigationBarColor">#0B0F0E</item>
+    </style>
+</resources>

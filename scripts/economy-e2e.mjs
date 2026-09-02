@@ -99,6 +99,8 @@ async function expectRejection(name, idToken, data, expectedReason) {
 
 const getUser = async (uid) => (await db.collection('users').doc(uid).get()).data();
 const getApp = async (id) => (await db.collection('apps').doc(id).get()).data();
+const getReservation = async (appId, testerUid) =>
+  (await db.collection('reservations').doc(`${appId}__${testerUid}`).get()).data();
 
 /** Invariant 4: the ledger is the source of truth for a balance. */
 async function assertLedgerMatchesBalance(uid) {
@@ -167,9 +169,10 @@ async function main() {
   }
 
   console.log('\nListing an app');
+  const PACKAGE = `com.example.habit${stamp}`;
   const { appId } = await callable('createApp', devToken, {
     name: 'Habit Garden',
-    packageName: `com.example.habit${stamp}`,
+    packageName: PACKAGE,
     shortDescription: 'A small habit tracker that grows a garden.',
     category: 'productivity',
     playTestUrl: `https://play.google.com/apps/testing/com.example.habit${stamp}`,
@@ -253,7 +256,30 @@ async function main() {
     appId,
     proofUrl: `https://firebasestorage.googleapis.com/v0/b/${PROJECT}.appspot.com/o/proofs%2F${t1Uid}%2Fshot.png`,
     note: 'Installed and opened it, looks good.',
+    // What the Android client's PackageManager check sends alongside the screenshot.
+    verifiedInstall: {
+      packageName: PACKAGE,
+      installed: true,
+      versionName: '1.4.2',
+      versionCode: 142,
+      firstInstallAt: Date.now() - 3 * 3600 * 1000,
+      installerPackage: 'com.android.vending',
+      // Deliberately a lie: the server must derive this from installerPackage, and must
+      // never let a device declare its own integrity verdict.
+      fromPlayStore: false,
+      integrityVerdict: 'MEETS_DEVICE_INTEGRITY',
+    },
   });
+  {
+    const res = await getReservation(appId, t1Uid);
+    check('install evidence is stored with the proof', () => assert.equal(res.verifiedInstall.packagePresent, true));
+    check('fromPlayStore is derived server-side, not taken from the device', () =>
+      assert.equal(res.verifiedInstall.fromPlayStore, true));
+    check('the device cannot declare its own integrity verdict', () =>
+      assert.equal(res.verifiedInstall.integrityVerdict, 'UNEVALUATED'));
+    check('checkedAt comes from the server clock', () =>
+      assert.ok(Math.abs(Date.parse(res.verifiedInstall.checkedAt) - Date.now()) < 60_000));
+  }
 
   await expectRejection('reviewProof', t2Token, { appId, testerUid: t1Uid, approve: true }, 'not_owner');
   check('a stranger cannot approve someone else’s proof', () => {});
@@ -322,8 +348,17 @@ async function main() {
     check('and clears the hold', () => assert.equal(dev.seatsHeld, 0));
   }
 
-  const checkin = await callable('recordCheckin', t1Token, { appId });
+  const checkin = await callable('recordCheckin', t1Token, {
+    appId,
+    // Evidence about a different package is not evidence about this listing.
+    verifiedInstall: { packageName: 'com.example.somethingelse', installed: true },
+  });
   check('an approved tester can check in', () => assert.equal(checkin.streak, 1));
+  {
+    const res = await getReservation(appId, t1Uid);
+    check('evidence for the wrong package is discarded', () =>
+      assert.equal(res.verifiedInstall.versionName, '1.4.2'));
+  }
   const again = await callable('recordCheckin', t1Token, { appId });
   check('a second check-in the same day is a no-op', () => assert.equal(again.alreadyCheckedIn, true));
 

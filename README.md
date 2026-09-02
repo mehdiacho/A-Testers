@@ -109,6 +109,7 @@ ledger at all; `firestore.rules` denies it outright.
 - [x] End-to-end economy test against the emulators — 38 assertions
 - [x] Web app: public catalogue, app pages, tester flow, review queue, seat ledger
 - [x] Retention board — the live "day 6/14, 12/12 still opted in" view for developers
-- [ ] Android app (Kotlin + Compose)
+- [x] Android app (Kotlin + Compose) — browse, join, daily check-in, on-device install check
 - [ ] Attested install verification via Play Integrity
+- [ ] Google sign-in on Android — blocked until Authentication is enabled in the console
 - [ ] Email notifications when proof lands or a tester goes quiet

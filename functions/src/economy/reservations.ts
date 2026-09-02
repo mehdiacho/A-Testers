@@ -12,6 +12,7 @@ import { db, COL, FieldValue, Timestamp } from '../lib/admin.js';
 import { getPlatformConfigTx } from '../lib/config.js';
 import { assertGuard, requireAuth, requireString, notFound, invalid } from '../lib/errors.js';
 import { holdSeat, releaseSeat, spendHeldSeat, creditSeats, bumpStat } from './seats.js';
+import { parseVerifiedInstall } from './install.js';
 import {
   ACTIVE_RESERVATION_STATUSES,
   canReserveSlot,
@@ -237,11 +238,21 @@ export const submitProof = onCall({ cors: true }, async (request) => {
       ),
     );
 
+    // The Android client sends what its PackageManager saw. It is stored beside the
+    // screenshot as corroboration for the developer, never in place of the review — the
+    // seat still only moves when a human approves.
+    const appSnap = await tx.get(appRef(appId));
+    const verifiedInstall = parseVerifiedInstall(
+      data.verifiedInstall,
+      (appSnap.data() as AppDoc | undefined)?.packageName ?? '',
+    );
+
     tx.update(resRef(id), {
       status: 'proof_submitted',
       proofUrl,
       proofNote: note,
       proofSubmittedAt: FieldValue.serverTimestamp(),
+      ...(verifiedInstall ? { verifiedInstall } : {}),
     });
 
     return { ok: true };
@@ -340,13 +351,15 @@ export const reviewProof = onCall({ cors: true }, async (request) => {
 
 export const recordCheckin = onCall({ cors: true }, async (request) => {
   const testerUid = requireAuth(request);
-  const appId = requireString((request.data as Record<string, unknown>)?.appId, 'appId', 128);
+  const data = (request.data ?? {}) as Record<string, unknown>;
+  const appId = requireString(data.appId, 'appId', 128);
   const id = reservationId(appId, testerUid);
 
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(resRef(id));
     if (!snap.exists) notFound('Reservation');
     const res = snap.data() as ReservationDoc;
+    const appSnap = await tx.get(appRef(appId));
 
     if (res.testerUid !== testerUid) {
       throw new HttpsError('permission-denied', 'This is not your reservation.');
@@ -365,10 +378,18 @@ export const recordCheckin = onCall({ cors: true }, async (request) => {
     const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
     const streak = res.checkins?.[yesterday] ? (res.checkinStreak ?? 0) + 1 : 1;
 
+    // A check-in from the phone re-confirms the app is still installed, which is the
+    // half of Google's rule a screenshot cannot speak to at all.
+    const verifiedInstall = parseVerifiedInstall(
+      data.verifiedInstall,
+      (appSnap.data() as AppDoc | undefined)?.packageName ?? '',
+    );
+
     tx.update(resRef(id), {
       [`checkins.${today}`]: true,
       lastCheckinAt: FieldValue.serverTimestamp(),
       checkinStreak: streak,
+      ...(verifiedInstall ? { verifiedInstall } : {}),
     });
 
     return { ok: true, alreadyCheckedIn: false, streak };

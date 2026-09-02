@@ -117,10 +117,20 @@ The central join object. The deterministic id gives us invariant 5 for free.
 | `status` | enum | `reserved`, `proof_submitted`, `approved`, `rejected`, `expired`, `withdrawn` |
 | `reservedAt`, `expiresAt` | timestamp | auto-expire after `reservationTtlHours` (default 72) |
 | `proofUrl`, `proofNote`, `proofSubmittedAt` | | screenshot evidence |
-| `verifiedInstall` | map / null | Android: package check + Play Integrity verdict |
+| `verifiedInstall` | map / null | Android: what PackageManager saw. See below. |
 | `reviewedAt`, `rejectionReason` | | |
 | `checkins` | map<dateISO, bool> | 14-day retention tracking |
 | `lastCheckinAt`, `checkinStreak` | | |
+
+`verifiedInstall` is written by `parseVerifiedInstall` (`functions/src/economy/install.ts`)
+from the payload the Android client sends with a proof or a check-in. Every field in that
+payload is a *claim by the device* — a rooted phone can tell PackageManager anything — so
+the server keeps the claim inside a known shape and overrides the two fields that must not
+be forgeable: `integrityVerdict` stays `UNEVALUATED` until a Play Integrity token is
+validated server-side, and `checkedAt` comes from the server clock so a device cannot
+backdate an install or stretch a retention window. Evidence naming a different package
+than the listing is discarded outright. It corroborates the developer's review; it never
+replaces it, and no seat moves on the strength of it.
 
 `ownerUid` is denormalised onto every reservation because security rules are not filters:
 a `list` is allowed only when the query itself proves every match is readable. So any

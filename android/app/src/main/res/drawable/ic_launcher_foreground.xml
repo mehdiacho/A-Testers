@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- A tick inside the safe zone: this app is about testers confirming installs. -->
+    <path
+        android:fillColor="#1FC47C"
+        android:pathData="M40,66.2 L30.6,56.8 27,60.4 40,73.4 68,45.4 64.4,41.8 Z" />
+</vector>

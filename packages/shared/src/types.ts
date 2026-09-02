@@ -130,11 +130,27 @@ export interface AppDoc {
   updatedAt: IsoDate;
 }
 
+/**
+ * What the Android client observed about the app it is testing.
+ *
+ * Every field except `integrityVerdict` and `checkedAt` is a *claim made by the device*,
+ * not a proof: a rooted phone can tell PackageManager whatever it likes. It raises the
+ * cost of faking a test from cropping a screenshot to modifying the OS, and it gives the
+ * developer something concrete to review. `integrityVerdict` is the half that cannot be
+ * forged, and it is set server-side once a Play Integrity token has been validated.
+ */
 export interface VerifiedInstall {
   /** Package presence confirmed by the Android client's PackageManager check. */
   packagePresent: boolean;
+  versionName: string | null;
+  versionCode: number | null;
+  firstInstallAt: IsoDate | null;
+  /** The installing package. `com.android.vending` is Play; anything else is a sideload. */
+  installerPackage: string | null;
+  fromPlayStore: boolean;
   /** Play Integrity verdict, when the token could be validated server-side. */
   integrityVerdict: 'MEETS_DEVICE_INTEGRITY' | 'MEETS_BASIC_INTEGRITY' | 'FAILED' | 'UNEVALUATED';
+  /** Set from the server clock, never from the device's. */
   checkedAt: IsoDate;
 }
 
