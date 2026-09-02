@@ -4,12 +4,9 @@
  * Everything that moves a seat is a callable, never a client write — see firestore.rules.
  */
 
-import { setGlobalOptions } from 'firebase-functions/v2';
-
-setGlobalOptions({
-  region: 'europe-west1',
-  maxInstances: 20,
-});
+// Global options (region, concurrency) are applied in lib/options.ts, which lib/admin.ts
+// imports. They cannot be set here: ESM evaluates the re-exports below before this
+// module's body, so the functions would already be defined by the time it ran.
 
 // Reservation lifecycle — the seat economy.
 export {

@@ -45,10 +45,30 @@ npm run build && npm test
 Run everything locally against the emulators:
 
 ```bash
-npm run emulators
+firebase emulators:start --project demo-a-testers
 ```
 
-The emulator UI is at http://localhost:4000.
+The emulator UI is at http://localhost:4000. Then, in another terminal:
+
+```bash
+npm run dev:web
+```
+
+Copy `web/.env.example` to `web/.env.local` first. For emulator-only work the checked-in
+defaults are enough — `demo-` project ids never reach real Firebase infrastructure.
+
+With the emulators running, exercise the whole seat lifecycle end to end:
+
+```bash
+npm run e2e
+```
+
+That drives the real callables over HTTP — reserve, proof, approve, reject, withdraw,
+check in — and asserts the balances, held counters and ledger all reconcile at each step.
+
+> If the functions emulator reports "Cannot determine backend specification. Timeout",
+> raise the discovery window: `FUNCTIONS_DISCOVERY_TIMEOUT=120`. ESM function bundles are
+> slow to introspect on Windows.
 
 ## How the seat economy works
 
@@ -71,10 +91,13 @@ ledger at all; `firestore.rules` denies it outright.
 
 ## Status
 
-- [x] Domain model, seat economy and guards (`packages/shared`) — unit tested
+- [x] Domain model, seat economy and guards (`packages/shared`) — 20 unit tests
 - [x] Firestore + Storage security rules, composite indexes
 - [x] Callable functions: reserve, withdraw, submit proof, review, check-in, listings
 - [x] Scheduled sweeps: reservation expiry, reputation recompute
-- [ ] Web app (Next.js)
+- [x] End-to-end economy test against the emulators — 38 assertions
+- [x] Web app: public catalogue, app pages, tester flow, review queue, seat ledger
 - [ ] Android app (Kotlin + Compose)
 - [ ] Attested install verification via Play Integrity
+- [ ] Retention board — the live "day 6/14, 12/12 still opted in" view for developers
+- [ ] Email notifications when proof lands or a tester goes quiet

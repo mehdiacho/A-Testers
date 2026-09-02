@@ -1,0 +1,102 @@
+@import 'tailwindcss';
+
+/*
+ * Palette. Deliberately restrained: the catalogue is a dense list of other people's apps,
+ * so the chrome stays neutral and colour is reserved for state — seats, slots, warnings.
+ */
+@theme {
+  --color-ink-50: #f6f7f9;
+  --color-ink-100: #eceef2;
+  --color-ink-200: #d5d9e2;
+  --color-ink-300: #b0b7c6;
+  --color-ink-400: #7d8698;
+  --color-ink-500: #5a6376;
+  --color-ink-600: #454d5e;
+  --color-ink-700: #363c4a;
+  --color-ink-800: #232832;
+  --color-ink-900: #161a21;
+  --color-ink-950: #0d1016;
+
+  --color-brand-400: #4ade9b;
+  --color-brand-500: #1fc47c;
+  --color-brand-600: #12a565;
+  --color-brand-700: #0d7f4e;
+
+  --color-warn-400: #fbbf5c;
+  --color-warn-600: #d97706;
+  --color-danger-400: #f87171;
+  --color-danger-600: #dc2626;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  --surface: var(--color-ink-50);
+  --surface-raised: #ffffff;
+  --border: var(--color-ink-200);
+  --text: var(--color-ink-900);
+  --text-muted: var(--color-ink-500);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: var(--color-ink-950);
+    --surface-raised: var(--color-ink-900);
+    --border: var(--color-ink-800);
+    --text: var(--color-ink-100);
+    --text-muted: var(--color-ink-400);
+  }
+}
+
+body {
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .card {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+  }
+
+  .muted {
+    color: var(--text-muted);
+  }
+
+  /* Tailwind 4 only lets @apply reference utilities, not other component classes, so the
+     shared button base is a selector list rather than a `@apply btn` in each variant. */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium
+           transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-brand-600 text-white hover:bg-brand-700;
+  }
+
+  .btn-secondary {
+    @apply border text-[color:var(--text)] hover:bg-[color:var(--surface)];
+    border-color: var(--border);
+  }
+
+  .btn-ghost {
+    @apply text-[color:var(--text-muted)] hover:text-[color:var(--text)];
+  }
+
+  .field {
+    @apply w-full rounded-lg border bg-transparent px-3 py-2 text-sm outline-none
+           focus:border-brand-500 focus:ring-1 focus:ring-brand-500;
+    border-color: var(--border);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+}

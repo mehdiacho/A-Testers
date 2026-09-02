@@ -4,6 +4,10 @@
  *
  * This uses the v1 auth trigger deliberately: the v2 equivalent (`beforeUserCreated`) is a
  * blocking function that requires Identity Platform, which is more than this needs.
+ *
+ * Note that it runs in us-central1 while every callable runs in europe-west1.
+ * `setGlobalOptions` only applies to v2 functions, and Firebase Auth background triggers
+ * are us-central1-only regardless. That is fine — nothing latency-sensitive depends on it.
  */
 
 import functionsV1 from 'firebase-functions/v1';
