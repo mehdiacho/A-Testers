@@ -1,9 +1,12 @@
 node_modules/
 dist/
-lib/
 .next/
 out/
 build/
+
+# Compiled output only — an unanchored `lib/` would also swallow web/src/lib.
+/functions/lib/
+/packages/*/lib/
 
 # Firebase
 .firebase/
