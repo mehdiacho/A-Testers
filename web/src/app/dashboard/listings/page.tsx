@@ -141,6 +141,9 @@ function ListingRow({ app, seats }: { app: AppDoc; seats: number }) {
           <Link href={`/apps/${app.id}`} className="btn-ghost text-xs">
             View
           </Link>
+          <Link href={`/dashboard/listings/${app.id}`} className="btn-secondary text-xs">
+            {app.testingStartsAt ? 'Retention' : 'Manage'}
+          </Link>
           {action && (
             <button
               onClick={() => void onToggle()}

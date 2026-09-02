@@ -66,6 +66,17 @@ npm run e2e
 That drives the real callables over HTTP — reserve, proof, approve, reject, withdraw,
 check in — and asserts the balances, held counters and ledger all reconcile at each step.
 
+To look at the retention board with realistic data, sign in to the web app, then seed a
+listing part-way through its 14-day window — two of its testers already gone quiet:
+
+```bash
+node scripts/seed-retention.mjs <your-uid>
+```
+
+Your uid is in the Auth emulator UI. Start the emulators with the same project id as
+`web/.env.local` for this (`--project a-testers-app`), otherwise the app and the seed
+script write to different emulator namespaces.
+
 > If the functions emulator reports "Cannot determine backend specification. Timeout",
 > raise the discovery window: `FUNCTIONS_DISCOVERY_TIMEOUT=120`. ESM function bundles are
 > slow to introspect on Windows.
@@ -97,7 +108,7 @@ ledger at all; `firestore.rules` denies it outright.
 - [x] Scheduled sweeps: reservation expiry, reputation recompute
 - [x] End-to-end economy test against the emulators — 38 assertions
 - [x] Web app: public catalogue, app pages, tester flow, review queue, seat ledger
+- [x] Retention board — the live "day 6/14, 12/12 still opted in" view for developers
 - [ ] Android app (Kotlin + Compose)
 - [ ] Attested install verification via Play Integrity
-- [ ] Retention board — the live "day 6/14, 12/12 still opted in" view for developers
 - [ ] Email notifications when proof lands or a tester goes quiet

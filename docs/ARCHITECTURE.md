@@ -122,6 +122,12 @@ The central join object. The deterministic id gives us invariant 5 for free.
 | `checkins` | map<dateISO, bool> | 14-day retention tracking |
 | `lastCheckinAt`, `checkinStreak` | | |
 
+`ownerUid` is denormalised onto every reservation because security rules are not filters:
+a `list` is allowed only when the query itself proves every match is readable. So any
+client query over `reservations` must constrain `ownerUid` or `testerUid` to the caller,
+even when another filter — `appId`, say — already implies it. Both the review queue and
+the retention board are shaped by that.
+
 ### `ledger/{autoId}` — append-only
 
 Every seat movement. Never updated or deleted; the source of truth for disputes.

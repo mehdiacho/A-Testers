@@ -67,11 +67,12 @@
       ]
     },
     {
-      "_comment": "Per-app tester roster and the retention board.",
+      "_comment": "Per-app tester roster and the retention board. ownerUid is in the query because rules are not filters: a list is only allowed when the query itself proves every match is readable.",
       "collectionGroup": "reservations",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "appId", "order": "ASCENDING" },
+        { "fieldPath": "ownerUid", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" }
       ]
     },
